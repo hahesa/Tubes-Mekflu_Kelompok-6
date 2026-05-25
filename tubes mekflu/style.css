@@ -1,0 +1,58 @@
+*{
+  top:119px;
+}
+
+@keyframes flow{
+  0%{
+    opacity:0.4;
+  }
+  100%{
+    opacity:1;
+  }
+}
+
+.pump{
+  position:absolute;
+  width:240px;
+  left:350px;
+  bottom:30px;
+}
+
+.pump img{
+  width:100%;
+  filter:drop-shadow(0 0 15px #29b6f6);
+}
+
+.head-line{
+  position:absolute;
+  right:120px;
+  top:20px;
+  width:3px;
+  height:420px;
+  border-left:3px dashed white;
+}
+
+.head-text{
+  position:absolute;
+  right:70px;
+  top:210px;
+  font-size:28px;
+  color:#29b6f6;
+}
+
+@media(max-width:1200px){
+
+  .main-grid{
+    grid-template-columns:1fr;
+  }
+
+  .header{
+    flex-direction:column;
+    gap:20px;
+  }
+
+  .header h1{
+    font-size:40px;
+  }
+
+}

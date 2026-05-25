@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pump Power Estimator - Tugas Besar Mekflu</title>
+    <style>
+        /* --- CSS: DESAIN TEMA GELAP (Mirip image_6413a1.jpg) --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #070f1e; color: #ffffff; padding: 20px; display: flex; justify-content: center; }
+        .container { max-width: 1200px; width: 100%; }
+        
+        header { background: linear-gradient(90deg, #0f1c3f, #070f1e); padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #1e293b; }
+        header h1 { color: #00b4d8; font-size: 28px; letter-spacing: 1px; }
+        header p { color: #94a3b8; font-size: 14px; margin-top: 5px; }
+
+        .dashboard { display: grid; grid-template-columns: 1fr 2fr; gap: 20px; }
+        @media (max-width: 900px) { .dashboard { grid-template-columns: 1fr; } }
+
+        .card { background-color: #0b1528; border: 1px solid #1e3a8a; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .card h2 { font-size: 18px; color: #00b4d8; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #1e293b; padding-bottom: 10px; }
+
+        /* Form Input */
+        .input-group { margin-bottom: 15px; }
+        .input-group label { display: block; color: #94a3b8; font-size: 13px; margin-bottom: 5px; }
+        .input-container { display: flex; align-items: center; position: relative; }
+        .input-container input { width: 100%; padding: 10px; background-color: #111e35; border: 1px solid #1e3a8a; border-radius: 6px; color: #fff; font-size: 16px; }
+        .input-container .unit { position: absolute; right: 15px; color: #64748b; font-size: 14px; }
+
+        button { width: 100%; padding: 12px; background: linear-gradient(135deg, #2563eb, #00b4d8); border: none; border-radius: 6px; color: white; font-weight: bold; font-size: 15px; cursor: pointer; transition: 0.3s; margin-top: 10px; }
+        button:hover { opacity: 0.9; transform: translateY(-1px); }
+
+        /* Hasil Perhitungan */
+        .result-box { background: linear-gradient(180deg, #112240, #0b1528); border-left: 5px solid #00b4d8; padding: 20px; border-radius: 8px; margin-top: 20px; text-align: center; }
+        .result-box h3 { font-size: 14px; color: #94a3b8; text-transform: uppercase; }
+        .result-value { font-size: 36px; color: #00e5ff; font-weight: bold; margin: 10px 0; }
+        .result-hp { color: #10b981; font-size: 18px; font-weight: 500; }
+
+        /* --- ANIMASI & VISUALISASI SISTEM POMPA --- */
+        .canvas-container { position: relative; width: 100%; height: 350px; background-color: #050b14; border-radius: 8px; overflow: hidden; border: 1px dashed #1e3a8a; }
+        
+        /* Pipa dengan animasi air mengalir */
+        .pipe { position: absolute; background-color: #1e293b; border: 2px solid #334155; overflow: hidden; }
+        .pipe::after { content: ''; position: absolute; background: linear-gradient(90deg, transparent, #00b4d8, transparent); width: 100%; height: 100%; animation: flow 1.5s linear infinite; }
+        
+        /* Posisi dan bentuk pipa (Suction & Discharge) */
+        .pipe-suction { left: 140px; bottom: 110px; width: 120px; height: 16px; }
+        .pipe-discharge-v { left: 320px; bottom: 120px; width: 16px; height: 130px; }
+        .pipe-discharge-v::after { background: linear-gradient(0deg, transparent, #00b4d8, transparent); animation: flow-up 1.5s linear infinite; }
+        .pipe-discharge-h { left: 320px; top: 84px; width: 200px; height: 16px; }
+
+        @keyframes flow { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+        @keyframes flow-up { 0% { transform: translateY(100%); } 100% { transform: translateY(-100%); } }
+
+        /* Tandon / Tangki Air */
+        .tank { position: absolute; width: 100px; height: 100px; border: 3px solid #64748b; border-top: none; background-color: rgba(15, 23, 42, 0.6); border-radius: 0 0 8px 8px; }
+        .water { position: absolute; bottom: 0; left: 0; width: 100%; background: linear-gradient(180deg, #00b4d8, #0077b6); border-radius: 0 0 5px 5px; transition: height 0.5s; }
+        
+        .tank-source { left: 50px; bottom: 50px; }
+        .tank-target { right: 120px; top: 50px; }
+
+        /* Mesin Pompa */
+        .pump-machine { position: absolute; left: 250px; bottom: 90px; width: 80px; height: 60px; background-color: #ef4444; border-radius: 8px; border: 2px solid #b91c1c; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 11px; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
+        .pump-machine::before { content: '🌀'; font-size: 20px; animation: spin 1s linear infinite; margin-right: 4px; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* Label Teks Indikator */
+        .label-text { position: absolute; font-size: 12px; color: #94a3b8; font-weight: 500; }
+        .indicator-line { position: absolute; border-left: 2px dashed #f59e0b; display: flex; align-items: center; justify-content: center; color: #f59e0b; font-size: 13px; font-weight: bold; }
+
+        footer { text-align: center; margin-top: 30px; color: #64748b; font-size: 12px; padding: 10px; border-top: 1px solid #1e293b; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>⚡ PUMP POWER ESTIMATOR</h1>
+        <p>Aplikasi Estimasi Daya Listrik Pompa Air • Kelompok Soal Nomor 2 • Tugas Besar Mekanika Fluida</p>
+    </header>
+
+    <div class="dashboard">
+        <!-- KOLOM KIRI: INPUT PARAMETER -->
+        <div class="card">
+            <h2>📋 Input Parameter</h2>
+            
+            <div class="input-group">
+                <label for="debit">Debit Aliran Air (Q)</label>
+                <div class="input-container">
+                    <input type="number" id="debit" value="0.05" step="0.001" min="0">
+                    <span class="unit">m³/s</span>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label for="head">Head Pompa Total (H)</label>
+                <div class="input-container">
+                    <input type="number" id="head" value="20" step="0.5" min="0">
+                    <span class="unit">m</span>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label for="efisiensi">Efisiensi Pompa (η)</label>
+                <div class="input-container">
+                    <input type="number" id="efisiensi" value="70" step="1" min="1" max="100">
+                    <span class="unit">%</span>
+                </div>
+            </div>
+
+            <button onclick="hitungDaya()">⚡ HITUNG DAYA</button>
+
+            <!-- Box Hasil Perhitungan -->
+            <div class="result-box">
+                <h3>Daya Listrik yang Dibutuhkan:</h3>
+                <div class="result-value" id="hasil-kw">14.01 kW</div>
+                <div class="result-hp" id="hasil-hp">≈ 18.79 HP</div>
+            </div>
+        </div>
+
+        <!-- KOLOM KANAN: ANIMASI VISUALISASI -->
+        <div class="card">
+            <h2>🔍 Visualisasi Sistem Pompa Interaktif</h2>
+            <div class="canvas-container">
+                
+                <!-- Tandon Sumber -->
+                <div class="tank tank-source">
+                    <div class="water" style="height: 70px;"></div>
+                </div>
+                <div class="label-text" style="left: 55px; bottom: 25px;">Tandon Sumber</div>
+
+                <!-- Pipa-Pipa -->
+                <div class="pipe pipe-suction"></div>
+                <div class="pipe pipe-discharge-v"></div>
+                <div class="pipe pipe-discharge-h"></div>
+
+                <!-- Mesin Pompa -->
+                <div class="pump-machine">POMPA</div>
+
+                <!-- Tandon Tujuan -->
+                <div class="tank tank-target">
+                    <div class="water" id="water-target" style="height: 60px;"></div>
+                </div>
+                <div class="label-text" style="right: 125px; top: 25px;">Tandon Tujuan</div>
+
+                <!-- Indikator Ketinggian / Head (H) -->
+                <div class="indicator-line" id="head-line" style="right: 50px; top: 60px; height: 190px; border-left: 2px dashed #f59e0b;">
+                    <span style="background-color: #050b14; padding: 4px 0; transform: rotate(90deg); position: absolute;">H = <span id="lbl-head">20</span>m</span>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        © 2026 Smart Pump Estimator - Program Studi Teknik Fisika Universitas Telkom
+    </footer>
+</div>
+
+<!-- --- JAVASCRIPT: LOGIKA RUMUS PERHITUNGAN --- -->
+<script>
+    function hitungDaya() {
+        // 1. Mengambil data nilai yang diinput oleh user
+        const Q = parseFloat(document.getElementById('debit').value);
+        const H = parseFloat(document.getElementById('head').value);
+        const effPersen = parseFloat(document.getElementById('efisiensi').value);
+        
+        // Konstanta Fisika Mekanika Fluida
+        const rho = 1000; // Massa jenis air (kg/m³)
+        const g = 9.81;   // Percepatan gravitasi (m/s²)
+        
+        // Validasi input sederhana agar tidak error
+        if (isNaN(Q) || isNaN(H) || isNaN(effPersen) || effPersen <= 0) {
+            alert("Harap masukkan semua parameter dengan benar!");
+            return;
+        }
+
+        // 2. Rumus Utama: P = (rho * g * Q * H) / efisiensi_desimal
+        const eta = effPersen / 100;
+        const dayaWatt = (rho * g * Q * H) / eta;
+        
+        // Konversi Satuan ke kW dan HP
+        const dayaKW = dayaWatt / 1000;
+        const dayaHP = dayaKW * 1.34102;
+
+        // 3. Menampilkan Hasil ke Layar Aplikasi
+        document.getElementById('hasil-kw').innerText = dayaKW.toFixed(2) + " kW";
+        document.getElementById('hasil-hp').innerText = "≈ " + dayaHP.toFixed(2) + " HP";
+        
+        // 4. Update Teks Indikator pada Animasi Grafik secara dinamis
+        document.getElementById('lbl-head').innerText = H;
+        
+        // Efek Visual: Jika debit makin besar, air di tandon tujuan digambarkan makin tinggi penuh
+        let tinggiAirTarget = Math.min(Q * 1000, 95); 
+        if (tinggiAirTarget < 20) tinggiAirTarget = 40; // Batas minimal visualisasi air
+        document.getElementById('water-target').style.height = tinggiAirTarget + "px";
+    }
+
+    // Jalankan kalkulasi pertama kali otomatis saat web dibuka
+    window.onload = hitungDaya;
+</script>
+
+</body>
+</html>
